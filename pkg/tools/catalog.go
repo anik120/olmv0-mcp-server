@@ -47,7 +47,7 @@ func (t *CatalogTools) ListCatalogSources(ctx context.Context, params map[string
 				cat.Namespace,
 				cat.Spec.SourceType,
 				cat.Spec.DisplayName,
-				cat.Status.ConnectionState.State,
+				cat.Status.GRPCConnectionState.LastObservedState,
 			))
 		}
 	}
@@ -107,9 +107,9 @@ func (t *CatalogTools) GetCatalogSource(ctx context.Context, params map[string]s
 	result.WriteString(fmt.Sprintf("  Display Name: %s\n", catalog.Spec.DisplayName))
 	result.WriteString(fmt.Sprintf("  Source Type: %s\n", catalog.Spec.SourceType))
 	result.WriteString(fmt.Sprintf("  Publisher: %s\n", catalog.Spec.Publisher))
-	result.WriteString(fmt.Sprintf("  Connection State: %s\n", catalog.Status.ConnectionState.State))
-	if catalog.Status.ConnectionState.LastObservedTime != nil {
-		result.WriteString(fmt.Sprintf("  Last Observed: %s\n", catalog.Status.ConnectionState.LastObservedTime.String()))
+	result.WriteString(fmt.Sprintf("  Connection State: %s\n", catalog.Status.GRPCConnectionState.LastObservedState))
+	if !catalog.Status.GRPCConnectionState.LastConnectTime.IsZero() {
+		result.WriteString(fmt.Sprintf("  Last Observed: %s\n", catalog.Status.GRPCConnectionState.LastConnectTime.String()))
 	}
 	result.WriteString("\n")
 
