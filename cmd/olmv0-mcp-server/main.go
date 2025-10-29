@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/operator-framework/operator-lifecycle-manager/olmv0-mcp-server/pkg/client"
 	"github.com/operator-framework/operator-lifecycle-manager/olmv0-mcp-server/pkg/server"

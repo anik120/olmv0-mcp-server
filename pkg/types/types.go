@@ -4,19 +4,18 @@ import (
 	"context"
 
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
 type MCPServer struct {
-	Config       *rest.Config
-	K8sClient    kubernetes.Interface
-	OLMClient    OLMClientInterface
-	Port         int
-	ReadOnly     bool
-	Kubeconfig   string
-	Toolsets     []string
+	Config     *rest.Config
+	K8sClient  kubernetes.Interface
+	OLMClient  OLMClientInterface
+	Port       int
+	ReadOnly   bool
+	Kubeconfig string
+	Toolsets   []string
 }
 
 type OLMClientInterface interface {
