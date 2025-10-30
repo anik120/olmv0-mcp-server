@@ -17,7 +17,7 @@ func NewCatalogTools(server *types.MCPServer) *CatalogTools {
 	return &CatalogTools{server: server}
 }
 
-func (t *CatalogTools) ListCatalogSources(ctx context.Context, params map[string]string) (*types.MCPResponse, error) {
+func (t *CatalogTools) ListCatalogSources(ctx context.Context, params map[string]string) (*types.MCPToolResult, error) {
 	namespace := params["namespace"]
 	if namespace == "" {
 		namespace = "olm"
@@ -25,7 +25,7 @@ func (t *CatalogTools) ListCatalogSources(ctx context.Context, params map[string
 
 	catalogs, err := t.server.OLMClient.ListCatalogSources(ctx, namespace)
 	if err != nil {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: fmt.Sprintf("Error listing CatalogSources: %v", err),
@@ -52,7 +52,7 @@ func (t *CatalogTools) ListCatalogSources(ctx context.Context, params map[string
 		}
 	}
 
-	return &types.MCPResponse{
+	return &types.MCPToolResult{
 		Content: []types.MCPContent{{
 			Type: "text",
 			Text: result.String(),
@@ -60,7 +60,7 @@ func (t *CatalogTools) ListCatalogSources(ctx context.Context, params map[string
 	}, nil
 }
 
-func (t *CatalogTools) GetCatalogSource(ctx context.Context, params map[string]string) (*types.MCPResponse, error) {
+func (t *CatalogTools) GetCatalogSource(ctx context.Context, params map[string]string) (*types.MCPToolResult, error) {
 	namespace := params["namespace"]
 	name := params["name"]
 
@@ -68,7 +68,7 @@ func (t *CatalogTools) GetCatalogSource(ctx context.Context, params map[string]s
 		namespace = "olm"
 	}
 	if name == "" {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: "Error: 'name' parameter is required",
@@ -79,7 +79,7 @@ func (t *CatalogTools) GetCatalogSource(ctx context.Context, params map[string]s
 
 	catalog, err := t.server.OLMClient.GetCatalogSource(ctx, namespace, name)
 	if err != nil {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: fmt.Sprintf("Error getting CatalogSource '%s': %v", name, err),
@@ -90,7 +90,7 @@ func (t *CatalogTools) GetCatalogSource(ctx context.Context, params map[string]s
 
 	jsonData, err := json.MarshalIndent(catalog, "", "  ")
 	if err != nil {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: fmt.Sprintf("Error marshaling CatalogSource to JSON: %v", err),
@@ -123,7 +123,7 @@ func (t *CatalogTools) GetCatalogSource(ctx context.Context, params map[string]s
 	result.WriteString(string(jsonData))
 	result.WriteString("\n```\n")
 
-	return &types.MCPResponse{
+	return &types.MCPToolResult{
 		Content: []types.MCPContent{{
 			Type: "text",
 			Text: result.String(),

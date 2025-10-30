@@ -29,12 +29,35 @@ type OLMClientInterface interface {
 	GetInstallPlan(ctx context.Context, namespace, name string) (*v1alpha1.InstallPlan, error)
 }
 
+// MCP Protocol types
 type MCPRequest struct {
-	Method string            `json:"method"`
-	Params map[string]string `json:"params"`
+	JSONRPC string                 `json:"jsonrpc"`
+	ID      interface{}            `json:"id,omitempty"`
+	Method  string                 `json:"method"`
+	Params  map[string]interface{} `json:"params,omitempty"`
 }
 
 type MCPResponse struct {
+	JSONRPC string      `json:"jsonrpc"`
+	ID      interface{} `json:"id,omitempty"`
+	Result  interface{} `json:"result,omitempty"`
+	Error   *MCPError   `json:"error,omitempty"`
+}
+
+type MCPError struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
+// Tool definitions for MCP
+type MCPTool struct {
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	InputSchema map[string]interface{} `json:"inputSchema"`
+}
+
+type MCPToolResult struct {
 	Content []MCPContent `json:"content"`
 	IsError bool         `json:"isError,omitempty"`
 }

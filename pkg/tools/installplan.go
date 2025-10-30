@@ -17,7 +17,7 @@ func NewInstallPlanTools(server *types.MCPServer) *InstallPlanTools {
 	return &InstallPlanTools{server: server}
 }
 
-func (t *InstallPlanTools) ListInstallPlans(ctx context.Context, params map[string]string) (*types.MCPResponse, error) {
+func (t *InstallPlanTools) ListInstallPlans(ctx context.Context, params map[string]string) (*types.MCPToolResult, error) {
 	namespace := params["namespace"]
 	if namespace == "" {
 		namespace = "default"
@@ -25,7 +25,7 @@ func (t *InstallPlanTools) ListInstallPlans(ctx context.Context, params map[stri
 
 	installPlans, err := t.server.OLMClient.ListInstallPlans(ctx, namespace)
 	if err != nil {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: fmt.Sprintf("Error listing InstallPlans: %v", err),
@@ -52,7 +52,7 @@ func (t *InstallPlanTools) ListInstallPlans(ctx context.Context, params map[stri
 		}
 	}
 
-	return &types.MCPResponse{
+	return &types.MCPToolResult{
 		Content: []types.MCPContent{{
 			Type: "text",
 			Text: result.String(),
@@ -60,7 +60,7 @@ func (t *InstallPlanTools) ListInstallPlans(ctx context.Context, params map[stri
 	}, nil
 }
 
-func (t *InstallPlanTools) GetInstallPlan(ctx context.Context, params map[string]string) (*types.MCPResponse, error) {
+func (t *InstallPlanTools) GetInstallPlan(ctx context.Context, params map[string]string) (*types.MCPToolResult, error) {
 	namespace := params["namespace"]
 	name := params["name"]
 
@@ -68,7 +68,7 @@ func (t *InstallPlanTools) GetInstallPlan(ctx context.Context, params map[string
 		namespace = "default"
 	}
 	if name == "" {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: "Error: 'name' parameter is required",
@@ -79,7 +79,7 @@ func (t *InstallPlanTools) GetInstallPlan(ctx context.Context, params map[string
 
 	installPlan, err := t.server.OLMClient.GetInstallPlan(ctx, namespace, name)
 	if err != nil {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: fmt.Sprintf("Error getting InstallPlan '%s': %v", name, err),
@@ -90,7 +90,7 @@ func (t *InstallPlanTools) GetInstallPlan(ctx context.Context, params map[string
 
 	jsonData, err := json.MarshalIndent(installPlan, "", "  ")
 	if err != nil {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: fmt.Sprintf("Error marshaling InstallPlan to JSON: %v", err),
@@ -135,7 +135,7 @@ func (t *InstallPlanTools) GetInstallPlan(ctx context.Context, params map[string
 	result.WriteString(string(jsonData))
 	result.WriteString("\n```\n")
 
-	return &types.MCPResponse{
+	return &types.MCPToolResult{
 		Content: []types.MCPContent{{
 			Type: "text",
 			Text: result.String(),

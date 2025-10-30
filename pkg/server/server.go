@@ -61,11 +61,13 @@ func (h *MCPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.logger.Errorf("Error handling request: %v", err)
 		response = &types.MCPResponse{
-			Content: []types.MCPContent{{
-				Type: "text",
-				Text: fmt.Sprintf("Internal server error: %v", err),
-			}},
-			IsError: true,
+			JSONRPC: "2.0",
+			ID:      req.ID,
+			Error: &types.MCPError{
+				Code:    -32603,
+				Message: "Internal server error",
+				Data:    err.Error(),
+			},
 		}
 	}
 
@@ -77,38 +79,66 @@ func (h *MCPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *MCPHandler) handleRequest(ctx context.Context, req types.MCPRequest) (*types.MCPResponse, error) {
 	method := req.Method
-	params := req.Params
+	// Convert interface{} params to string map for HTTP compatibility
+	stringParams := make(map[string]string)
+	if req.Params != nil {
+		for k, v := range req.Params {
+			if str, ok := v.(string); ok {
+				stringParams[k] = str
+			}
+		}
+	}
 
-	h.logger.Infof("Handling request: %s with params: %v", method, params)
+	h.logger.Infof("Handling request: %s with params: %v", method, stringParams)
+
+	var toolResult *types.MCPToolResult
+	var err error
 
 	switch method {
 	case "list_tools":
 		return h.listTools(), nil
 	case "list_csvs":
-		return h.csvTools.ListCSVs(ctx, params)
+		toolResult, err = h.csvTools.ListCSVs(ctx, stringParams)
 	case "get_csv":
-		return h.csvTools.GetCSV(ctx, params)
+		toolResult, err = h.csvTools.GetCSV(ctx, stringParams)
 	case "list_subscriptions":
-		return h.subTools.ListSubscriptions(ctx, params)
+		toolResult, err = h.subTools.ListSubscriptions(ctx, stringParams)
 	case "get_subscription":
-		return h.subTools.GetSubscription(ctx, params)
+		toolResult, err = h.subTools.GetSubscription(ctx, stringParams)
 	case "list_catalog_sources":
-		return h.catTools.ListCatalogSources(ctx, params)
+		toolResult, err = h.catTools.ListCatalogSources(ctx, stringParams)
 	case "get_catalog_source":
-		return h.catTools.GetCatalogSource(ctx, params)
+		toolResult, err = h.catTools.GetCatalogSource(ctx, stringParams)
 	case "list_install_plans":
-		return h.ipTools.ListInstallPlans(ctx, params)
+		toolResult, err = h.ipTools.ListInstallPlans(ctx, stringParams)
 	case "get_install_plan":
-		return h.ipTools.GetInstallPlan(ctx, params)
+		toolResult, err = h.ipTools.GetInstallPlan(ctx, stringParams)
 	default:
 		return &types.MCPResponse{
-			Content: []types.MCPContent{{
-				Type: "text",
-				Text: fmt.Sprintf("Unknown method: %s", method),
-			}},
-			IsError: true,
+			JSONRPC: "2.0",
+			Error: &types.MCPError{
+				Code:    -32601,
+				Message: fmt.Sprintf("Unknown method: %s", method),
+			},
 		}, nil
 	}
+
+	if err != nil {
+		return &types.MCPResponse{
+			JSONRPC: "2.0",
+			Error: &types.MCPError{
+				Code:    -32603,
+				Message: "Internal error",
+				Data:    err.Error(),
+			},
+		}, nil
+	}
+
+	// Convert MCPToolResult to MCPResponse for HTTP compatibility
+	return &types.MCPResponse{
+		JSONRPC: "2.0",
+		Result:  toolResult,
+	}, nil
 }
 
 func (h *MCPHandler) listTools() *types.MCPResponse {
@@ -143,10 +173,13 @@ func (h *MCPHandler) listTools() *types.MCPResponse {
 	result.WriteString("  - list_tools: Show this help message\n")
 
 	return &types.MCPResponse{
-		Content: []types.MCPContent{{
-			Type: "text",
-			Text: result.String(),
-		}},
+		JSONRPC: "2.0",
+		Result: &types.MCPToolResult{
+			Content: []types.MCPContent{{
+				Type: "text",
+				Text: result.String(),
+			}},
+		},
 	}
 }
 

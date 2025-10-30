@@ -17,7 +17,7 @@ func NewCSVTools(server *types.MCPServer) *CSVTools {
 	return &CSVTools{server: server}
 }
 
-func (t *CSVTools) ListCSVs(ctx context.Context, params map[string]string) (*types.MCPResponse, error) {
+func (t *CSVTools) ListCSVs(ctx context.Context, params map[string]string) (*types.MCPToolResult, error) {
 	namespace := params["namespace"]
 	if namespace == "" {
 		namespace = "default"
@@ -25,7 +25,7 @@ func (t *CSVTools) ListCSVs(ctx context.Context, params map[string]string) (*typ
 
 	csvs, err := t.server.OLMClient.ListClusterServiceVersions(ctx, namespace)
 	if err != nil {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: fmt.Sprintf("Error listing ClusterServiceVersions: %v", err),
@@ -52,7 +52,7 @@ func (t *CSVTools) ListCSVs(ctx context.Context, params map[string]string) (*typ
 		}
 	}
 
-	return &types.MCPResponse{
+	return &types.MCPToolResult{
 		Content: []types.MCPContent{{
 			Type: "text",
 			Text: result.String(),
@@ -60,7 +60,7 @@ func (t *CSVTools) ListCSVs(ctx context.Context, params map[string]string) (*typ
 	}, nil
 }
 
-func (t *CSVTools) GetCSV(ctx context.Context, params map[string]string) (*types.MCPResponse, error) {
+func (t *CSVTools) GetCSV(ctx context.Context, params map[string]string) (*types.MCPToolResult, error) {
 	namespace := params["namespace"]
 	name := params["name"]
 
@@ -68,7 +68,7 @@ func (t *CSVTools) GetCSV(ctx context.Context, params map[string]string) (*types
 		namespace = "default"
 	}
 	if name == "" {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: "Error: 'name' parameter is required",
@@ -79,7 +79,7 @@ func (t *CSVTools) GetCSV(ctx context.Context, params map[string]string) (*types
 
 	csv, err := t.server.OLMClient.GetClusterServiceVersion(ctx, namespace, name)
 	if err != nil {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: fmt.Sprintf("Error getting ClusterServiceVersion '%s': %v", name, err),
@@ -90,7 +90,7 @@ func (t *CSVTools) GetCSV(ctx context.Context, params map[string]string) (*types
 
 	jsonData, err := json.MarshalIndent(csv, "", "  ")
 	if err != nil {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: fmt.Sprintf("Error marshaling CSV to JSON: %v", err),
@@ -115,7 +115,7 @@ func (t *CSVTools) GetCSV(ctx context.Context, params map[string]string) (*types
 	result.WriteString(string(jsonData))
 	result.WriteString("\n```\n")
 
-	return &types.MCPResponse{
+	return &types.MCPToolResult{
 		Content: []types.MCPContent{{
 			Type: "text",
 			Text: result.String(),

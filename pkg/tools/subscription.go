@@ -17,7 +17,7 @@ func NewSubscriptionTools(server *types.MCPServer) *SubscriptionTools {
 	return &SubscriptionTools{server: server}
 }
 
-func (t *SubscriptionTools) ListSubscriptions(ctx context.Context, params map[string]string) (*types.MCPResponse, error) {
+func (t *SubscriptionTools) ListSubscriptions(ctx context.Context, params map[string]string) (*types.MCPToolResult, error) {
 	namespace := params["namespace"]
 	if namespace == "" {
 		namespace = "default"
@@ -25,7 +25,7 @@ func (t *SubscriptionTools) ListSubscriptions(ctx context.Context, params map[st
 
 	subscriptions, err := t.server.OLMClient.ListSubscriptions(ctx, namespace)
 	if err != nil {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: fmt.Sprintf("Error listing Subscriptions: %v", err),
@@ -53,7 +53,7 @@ func (t *SubscriptionTools) ListSubscriptions(ctx context.Context, params map[st
 		}
 	}
 
-	return &types.MCPResponse{
+	return &types.MCPToolResult{
 		Content: []types.MCPContent{{
 			Type: "text",
 			Text: result.String(),
@@ -61,7 +61,7 @@ func (t *SubscriptionTools) ListSubscriptions(ctx context.Context, params map[st
 	}, nil
 }
 
-func (t *SubscriptionTools) GetSubscription(ctx context.Context, params map[string]string) (*types.MCPResponse, error) {
+func (t *SubscriptionTools) GetSubscription(ctx context.Context, params map[string]string) (*types.MCPToolResult, error) {
 	namespace := params["namespace"]
 	name := params["name"]
 
@@ -69,7 +69,7 @@ func (t *SubscriptionTools) GetSubscription(ctx context.Context, params map[stri
 		namespace = "default"
 	}
 	if name == "" {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: "Error: 'name' parameter is required",
@@ -80,7 +80,7 @@ func (t *SubscriptionTools) GetSubscription(ctx context.Context, params map[stri
 
 	subscription, err := t.server.OLMClient.GetSubscription(ctx, namespace, name)
 	if err != nil {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: fmt.Sprintf("Error getting Subscription '%s': %v", name, err),
@@ -91,7 +91,7 @@ func (t *SubscriptionTools) GetSubscription(ctx context.Context, params map[stri
 
 	jsonData, err := json.MarshalIndent(subscription, "", "  ")
 	if err != nil {
-		return &types.MCPResponse{
+		return &types.MCPToolResult{
 			Content: []types.MCPContent{{
 				Type: "text",
 				Text: fmt.Sprintf("Error marshaling Subscription to JSON: %v", err),
@@ -117,7 +117,7 @@ func (t *SubscriptionTools) GetSubscription(ctx context.Context, params map[stri
 	result.WriteString(string(jsonData))
 	result.WriteString("\n```\n")
 
-	return &types.MCPResponse{
+	return &types.MCPToolResult{
 		Content: []types.MCPContent{{
 			Type: "text",
 			Text: result.String(),

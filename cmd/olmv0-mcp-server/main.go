@@ -20,6 +20,7 @@ var (
 	kubeconfig string
 	readOnly   bool
 	toolsets   []string
+	stdio      bool
 )
 
 func main() {
@@ -41,10 +42,11 @@ on OLM v0 resources and operations.`,
 		Run: runServer,
 	}
 
-	rootCmd.Flags().IntVarP(&port, "port", "p", 8080, "HTTP/SSE server port")
+	rootCmd.Flags().IntVarP(&port, "port", "p", 8080, "HTTP/SSE server port (ignored when --stdio is used)")
 	rootCmd.Flags().StringVar(&kubeconfig, "kubeconfig", "", "Path to kubeconfig file (default: $HOME/.kube/config)")
 	rootCmd.Flags().BoolVar(&readOnly, "read-only", true, "Prevent write operations (default: true)")
 	rootCmd.Flags().StringSliceVar(&toolsets, "toolsets", []string{"csv", "subscription", "catalog", "installplan"}, "Enable specific toolsets")
+	rootCmd.Flags().BoolVar(&stdio, "stdio", true, "Use stdio transport for MCP (default: true, use --stdio=false for HTTP)")
 
 	if err := rootCmd.Execute(); err != nil {
 		logrus.Fatal(err)
@@ -79,8 +81,17 @@ func runServer(cmd *cobra.Command, args []string) {
 		Toolsets:   toolsets,
 	}
 
-	if err := server.StartServer(mcpServer); err != nil {
-		logrus.Fatalf("Error starting server: %v", err)
+	if stdio {
+		logrus.Info("Starting MCP server with stdio transport")
+		stdioServer := server.NewMCPStdioServer(mcpServer)
+		if err := stdioServer.Start(); err != nil {
+			logrus.Fatalf("Error starting stdio server: %v", err)
+		}
+	} else {
+		logrus.Info("Starting MCP server with HTTP transport")
+		if err := server.StartServer(mcpServer); err != nil {
+			logrus.Fatalf("Error starting HTTP server: %v", err)
+		}
 	}
 }
 
